@@ -368,8 +368,8 @@ function ExerciseBlock({
       <View style={blockStyles.buttons}>
         <RepBtn label="-1" onPress={() => onAddReps(-1)} variant="minus" />
         <RepBtn label="+1" onPress={() => onAddReps(1)} />
-        <RepBtn label={`+${perRound}`} onPress={() => onAddReps(perRound)} />
-        <RepBtn label={`+${perRound * 2}`} onPress={() => onAddReps(perRound * 2)} variant="large" />
+        <RepBtn label={`+${perRound}`} sublabel="1 RD" onPress={() => onAddReps(perRound)} />
+        <RepBtn label={`+${perRound * 2}`} sublabel="2 RD" onPress={() => onAddReps(perRound * 2)} variant="large" />
       </View>
     </View>
   );
@@ -443,10 +443,12 @@ function AsRxdExerciseView({
 
 function RepBtn({
   label,
+  sublabel,
   onPress,
   variant,
 }: {
   label: string;
+  sublabel?: string;
   onPress: () => void;
   variant?: 'minus' | 'large';
 }) {
@@ -459,6 +461,11 @@ function RepBtn({
       <Text style={[repStyles.label, variant === 'minus' && repStyles.labelMinus, variant === 'large' && repStyles.labelLarge]}>
         {label}
       </Text>
+      {sublabel && (
+        <Text style={[repStyles.sublabel, variant === 'large' && repStyles.sublabelLarge]}>
+          {sublabel}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -600,12 +607,18 @@ const rxdStyles = StyleSheet.create({
 
 const repStyles = StyleSheet.create({
   btn: {
-    flex: 1, backgroundColor: colors.surfaceElevated, borderRadius: 4, paddingVertical: 16,
-    alignItems: 'center', justifyContent: 'center',
+    flex: 1, backgroundColor: colors.surfaceElevated, borderRadius: 4, paddingVertical: 14,
+    alignItems: 'center', justifyContent: 'center', gap: 2,
   },
-  btnMinus: { flex: 0, width: 48, backgroundColor: colors.background },
+  btnMinus: {
+    flex: 0, width: 52,
+    backgroundColor: 'rgba(204, 34, 34, 0.12)',
+    borderWidth: 1, borderColor: 'rgba(204, 34, 34, 0.35)',
+  },
   btnLarge: { backgroundColor: colors.accent, flex: 1.2 },
   label: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  labelMinus: { color: colors.textMuted },
+  labelMinus: { color: '#CC4444', fontSize: 16, fontWeight: '800' },
   labelLarge: { fontSize: 16, fontWeight: '800' },
+  sublabel: { fontSize: 9, fontWeight: '600', color: colors.textMuted, letterSpacing: 1 },
+  sublabelLarge: { color: 'rgba(255,255,255,0.7)' },
 });

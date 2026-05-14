@@ -145,32 +145,15 @@ export function ResultsScreen() {
           <Text style={styles.exportErrorText}>Export failed. Please try again.</Text>
         )}
 
-        {confirmReset ? (
-          <View style={styles.confirmRow}>
-            <TouchableOpacity
-              style={styles.confirmCancelBtn}
-              onPress={() => setConfirmReset(false)}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.confirmCancelText}>CANCEL</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.confirmResetBtn}
-              onPress={reset}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.confirmResetText}>CONFIRM RESET</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={() => setConfirmReset(true)}
-            activeOpacity={0.75}
-          >
-            <Text style={styles.resetButtonText}>RESET — START OVER</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[styles.resetButton, confirmReset && styles.resetButtonPrimed]}
+          onPress={confirmReset ? reset : () => setConfirmReset(true)}
+          activeOpacity={0.75}
+        >
+          <Text style={[styles.resetButtonText, confirmReset && styles.resetButtonTextPrimed]}>
+            {confirmReset ? 'TAP AGAIN TO CONFIRM RESET' : 'RESET — START OVER'}
+          </Text>
+        </TouchableOpacity>
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -363,38 +346,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     letterSpacing: 0.5,
   },
-  confirmRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
+  resetButtonPrimed: {
+    borderColor: '#CC2222',
+    backgroundColor: 'rgba(204, 34, 34, 0.08)',
   },
-  confirmCancelBtn: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    borderRadius: 4,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.divider,
-  },
-  confirmCancelText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    letterSpacing: 2,
-  },
-  confirmResetBtn: {
-    flex: 2,
-    backgroundColor: '#CC2222',
-    borderRadius: 4,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  confirmResetText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.textPrimary,
-    letterSpacing: 2,
+  resetButtonTextPrimed: {
+    color: '#CC2222',
   },
 });
 
