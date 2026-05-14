@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
@@ -55,28 +54,42 @@ export function WorkoutScreen() {
   const progressPct = Math.round(overallProgress * 100);
 
   const repCounts: Record<ExercisePhase, number> = { pullUps, pushUps, squats };
-
-  function handleBack() {
-    Alert.alert('End Workout', 'Return to setup? Your current workout will be lost.', [
-      { text: 'Keep Going', style: 'cancel' },
-      { text: 'End Workout', style: 'destructive', onPress: reset },
-    ]);
-  }
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.backText}>END</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>MURPH</Text>
-        <TouchableOpacity
-          onPress={toggleTimer}
-          style={[styles.timerToggle, isRunning ? styles.timerTogglePause : styles.timerToggleResume]}
-        >
-          <Text style={styles.timerToggleText}>{isRunning ? 'PAUSE' : 'RESUME'}</Text>
-        </TouchableOpacity>
+        {confirmingEnd ? (
+          <>
+            <TouchableOpacity
+              onPress={() => setConfirmingEnd(false)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.backText}>CANCEL</Text>
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, styles.headerTitleWarning]}>END WORKOUT?</Text>
+            <TouchableOpacity onPress={reset} style={[styles.timerToggle, styles.timerToggleEnd]}>
+              <Text style={styles.timerToggleText}>END</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              onPress={() => setConfirmingEnd(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.backText}>END</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>MURPH</Text>
+            <TouchableOpacity
+              onPress={toggleTimer}
+              style={[styles.timerToggle, isRunning ? styles.timerTogglePause : styles.timerToggleResume]}
+            >
+              <Text style={styles.timerToggleText}>{isRunning ? 'PAUSE' : 'RESUME'}</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -126,6 +139,11 @@ export function WorkoutScreen() {
               onAddReps={addReps}
               completedRounds={completedRounds}
               totalRounds={PARTITION_MODES[config!.partitionMode].totalRounds}
+              perRoundValues={{
+                pullUps: PARTITION_MODES[config!.partitionMode].pullPerRound,
+                pushUps: PARTITION_MODES[config!.partitionMode].pushPerRound,
+                squats: PARTITION_MODES[config!.partitionMode].squatPerRound,
+              }}
             />
           )}
 
@@ -286,11 +304,13 @@ function CombinedExerciseView({
   onAddReps,
   completedRounds,
   totalRounds,
+  perRoundValues,
 }: {
   repCounts: Record<ExercisePhase, number>;
   onAddReps: (exercise: ExerciseKey, count: number) => void;
   completedRounds: number;
   totalRounds: number;
+  perRoundValues: Record<ExercisePhase, number>;
 }) {
   return (
     <View style={combinedStyles.container}>
@@ -301,6 +321,7 @@ function CombinedExerciseView({
             count={repCounts[ep]}
             total={EXERCISE_TOTALS[ep]}
             onAddReps={(n) => onAddReps(ep, n)}
+            perRound={perRoundValues[ep]}
           />
           {i < EXERCISE_PHASES.length - 1 && <View style={combinedStyles.divider} />}
         </View>
@@ -322,11 +343,13 @@ function ExerciseBlock({
   count,
   total,
   onAddReps,
+  perRound,
 }: {
   label: string;
   count: number;
   total: number;
   onAddReps: (n: number) => void;
+  perRound: number;
 }) {
   const progress = count / total;
   const done = count >= total;
@@ -345,8 +368,8 @@ function ExerciseBlock({
       <View style={blockStyles.buttons}>
         <RepBtn label="-1" onPress={() => onAddReps(-1)} variant="minus" />
         <RepBtn label="+1" onPress={() => onAddReps(1)} />
-        <RepBtn label="+5" onPress={() => onAddReps(5)} />
-        <RepBtn label="+10" onPress={() => onAddReps(10)} variant="large" />
+        <RepBtn label={`+${perRound}`} onPress={() => onAddReps(perRound)} />
+        <RepBtn label={`+${perRound * 2}`} onPress={() => onAddReps(perRound * 2)} variant="large" />
       </View>
     </View>
   );
@@ -458,6 +481,8 @@ const styles = StyleSheet.create({
   timerToggle: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 3, minWidth: 72, alignItems: 'center' },
   timerTogglePause: { backgroundColor: colors.surfaceElevated },
   timerToggleResume: { backgroundColor: colors.accent },
+  timerToggleEnd: { backgroundColor: '#CC2222' },
+  headerTitleWarning: { color: '#CC2222' },
   timerToggleText: { fontSize: 11, fontWeight: '800', color: colors.textPrimary, letterSpacing: 1.5 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 40 },

@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +18,8 @@ export function ResultsScreen() {
   const { state, reset } = useWorkout();
   const { config, elapsed, pullUps, pushUps, squats, run1EndTime, exercisesEndTime, run2EndTime } = state;
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   if (!config || run1EndTime === null || exercisesEndTime === null || run2EndTime === null) {
     return (
@@ -49,28 +50,18 @@ export function ResultsScreen() {
 
   async function handleExport() {
     setExporting(true);
+    setExportError(false);
     try {
       await exportResults(config!, {
         run1EndTime: run1EndTime!,
         exercisesEndTime: exercisesEndTime!,
         run2EndTime: run2EndTime!,
       });
-    } catch (err) {
-      Alert.alert('Export Failed', 'Could not save results file.');
+    } catch (_err) {
+      setExportError(true);
     } finally {
       setExporting(false);
     }
-  }
-
-  function handleReset() {
-    Alert.alert(
-      'Start Over',
-      'This will clear all results and return to setup.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Reset', style: 'destructive', onPress: reset },
-      ]
-    );
   }
 
   return (
@@ -150,10 +141,36 @@ export function ResultsScreen() {
             <Text style={styles.exportButtonText}>EXPORT RESULTS</Text>
           )}
         </TouchableOpacity>
+        {exportError && (
+          <Text style={styles.exportErrorText}>Export failed. Please try again.</Text>
+        )}
 
-        <TouchableOpacity style={styles.resetButton} onPress={handleReset} activeOpacity={0.75}>
-          <Text style={styles.resetButtonText}>RESET — START OVER</Text>
-        </TouchableOpacity>
+        {confirmReset ? (
+          <View style={styles.confirmRow}>
+            <TouchableOpacity
+              style={styles.confirmCancelBtn}
+              onPress={() => setConfirmReset(false)}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.confirmCancelText}>CANCEL</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.confirmResetBtn}
+              onPress={reset}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.confirmResetText}>CONFIRM RESET</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.resetButton}
+            onPress={() => setConfirmReset(true)}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.resetButtonText}>RESET — START OVER</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -337,6 +354,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: colors.textSecondary,
+    letterSpacing: 2,
+  },
+  exportErrorText: {
+    fontSize: 12,
+    color: '#FF4444',
+    textAlign: 'center',
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  confirmRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  confirmCancelBtn: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderRadius: 4,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.divider,
+  },
+  confirmCancelText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 2,
+  },
+  confirmResetBtn: {
+    flex: 2,
+    backgroundColor: '#CC2222',
+    borderRadius: 4,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  confirmResetText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
 });
