@@ -55,6 +55,7 @@ type Action =
   | { type: 'COMPLETE_RUN1' }
   | { type: 'SET_PHASE'; phase: WorkoutPhase }
   | { type: 'ADD_REPS'; exercise: ExerciseKey; count: number }
+  | { type: 'COMPLETE_EXERCISE'; exercise: ExerciseKey }
   | { type: 'COMPLETE_RUN2' }
   | { type: 'RESET' };
 
@@ -107,6 +108,22 @@ function reducer(state: WorkoutState, action: Action): WorkoutState {
       return next;
     }
 
+    case 'COMPLETE_EXERCISE': {
+      const next = { ...state };
+      if (action.exercise === 'pullUps') {
+        next.pullUps = TOTAL_PULLUPS;
+        next.phase = 'pushUps';
+      } else if (action.exercise === 'pushUps') {
+        next.pushUps = TOTAL_PUSHUPS;
+        next.phase = 'squats';
+      } else {
+        next.squats = TOTAL_SQUATS;
+        next.exercisesEndTime = next.elapsed;
+        next.phase = 'run2';
+      }
+      return next;
+    }
+
     case 'COMPLETE_RUN2':
       if (state.phase !== 'run2') return state;
       return { ...state, run2EndTime: state.elapsed, phase: 'done', isRunning: false, screen: 'results' };
@@ -128,6 +145,7 @@ interface WorkoutContextValue {
   completeRun1: () => void;
   setPhase: (phase: WorkoutPhase) => void;
   addReps: (exercise: ExerciseKey, count: number) => void;
+  completeExercise: (exercise: ExerciseKey) => void;
   completeRun2: () => void;
   reset: () => void;
   overallProgress: number;
@@ -167,6 +185,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const addReps = useCallback((exercise: ExerciseKey, count: number) => {
     dispatch({ type: 'ADD_REPS', exercise, count });
   }, []);
+  const completeExercise = useCallback((exercise: ExerciseKey) => {
+    dispatch({ type: 'COMPLETE_EXERCISE', exercise });
+  }, []);
   const completeRun2 = useCallback(() => dispatch({ type: 'COMPLETE_RUN2' }), []);
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
@@ -200,6 +221,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         completeRun1,
         setPhase,
         addReps,
+        completeExercise,
         completeRun2,
         reset,
         overallProgress,

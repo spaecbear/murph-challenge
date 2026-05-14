@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Platform,
   Switch,
-  Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +22,7 @@ export function SetupScreen() {
 
   const today = new Date();
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState(false);
   const [date, setDate] = useState(today);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [notes, setNotes] = useState('');
@@ -40,7 +40,7 @@ export function SetupScreen() {
 
   function handleStart() {
     if (!name.trim()) {
-      Alert.alert('Name Required', 'Enter your name to begin.');
+      setNameError(true);
       return;
     }
     startWorkout({
@@ -74,14 +74,17 @@ export function SetupScreen() {
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>NAME</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, nameError && styles.inputError]}
             value={name}
-            onChangeText={setName}
+            onChangeText={(v) => { setName(v); if (v.trim()) setNameError(false); }}
             placeholder="Full name"
             placeholderTextColor={colors.textMuted}
             autoCapitalize="words"
             autoCorrect={false}
           />
+          {nameError && (
+            <Text style={styles.fieldError}>Name is required to start.</Text>
+          )}
         </View>
 
         {/* Date */}
@@ -280,6 +283,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     justifyContent: 'center',
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF4444',
+  },
+  fieldError: {
+    fontSize: 12,
+    color: '#FF4444',
+    marginTop: 6,
+    letterSpacing: 0.3,
   },
   inputMulti: {
     minHeight: 72,
