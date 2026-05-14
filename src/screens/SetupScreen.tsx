@@ -26,7 +26,7 @@ export function SetupScreen() {
   const [date, setDate] = useState(today);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [notes, setNotes] = useState('');
-  const [partitionMode, setPartitionMode] = useState<PartitionMode>('twentyRounds');
+  const [partitionMode, setPartitionMode] = useState<PartitionMode>('asRxd');
   const [hasVest, setHasVest] = useState(false);
   const [vestWeight, setVestWeight] = useState<20 | 14>(20);
 
