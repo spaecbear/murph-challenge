@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { WorkoutProvider, useWorkout } from './src/state/WorkoutContext';
@@ -21,11 +22,20 @@ function AppContent() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <WorkoutProvider>
-        <StatusBar style="light" backgroundColor={colors.background} />
-        <AppContent />
-      </WorkoutProvider>
-    </SafeAreaProvider>
+    <View style={styles.root}>
+      <StatusBar style="light" backgroundColor={colors.background} translucent={false} />
+      <SafeAreaProvider>
+        <WorkoutProvider>
+          <AppContent />
+        </WorkoutProvider>
+      </SafeAreaProvider>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+});
