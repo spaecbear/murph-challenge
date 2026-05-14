@@ -31,6 +31,9 @@ export interface WorkoutState {
   run1EndTime: number | null;
   exercisesEndTime: number | null;
   run2EndTime: number | null;
+  // Wall-clock fields for background-accurate timing
+  startTimestamp: number | null; // Date.now() when current run segment started
+  baseElapsed: number;           // seconds accumulated before current segment
 }
 
 const initialState: WorkoutState = {
@@ -45,13 +48,15 @@ const initialState: WorkoutState = {
   run1EndTime: null,
   exercisesEndTime: null,
   run2EndTime: null,
+  startTimestamp: null,
+  baseElapsed: 0,
 };
 
 type Action =
-  | { type: 'START_WORKOUT'; config: WorkoutConfig }
-  | { type: 'TICK' }
-  | { type: 'PAUSE' }
-  | { type: 'RESUME' }
+  | { type: 'START_WORKOUT'; config: WorkoutConfig; now: number }
+  | { type: 'TICK'; now: number }
+  | { type: 'PAUSE'; now: number }
+  | { type: 'RESUME'; now: number }
   | { type: 'COMPLETE_RUN1' }
   | { type: 'SET_PHASE'; phase: WorkoutPhase }
   | { type: 'ADD_REPS'; exercise: ExerciseKey; count: number }
@@ -64,17 +69,30 @@ const EXERCISE_PHASES: WorkoutPhase[] = ['pullUps', 'pushUps', 'squats'];
 function reducer(state: WorkoutState, action: Action): WorkoutState {
   switch (action.type) {
     case 'START_WORKOUT':
-      return { ...initialState, config: action.config, screen: 'workout', phase: 'run1' };
+      return {
+        ...initialState,
+        config: action.config,
+        screen: 'workout',
+        phase: 'run1',
+        isRunning: true,
+        startTimestamp: action.now,
+        baseElapsed: 0,
+      };
 
-    case 'TICK':
-      if (!state.isRunning) return state;
-      return { ...state, elapsed: state.elapsed + 1 };
+    case 'TICK': {
+      if (!state.isRunning || state.startTimestamp === null) return state;
+      const elapsed = state.baseElapsed + Math.floor((action.now - state.startTimestamp) / 1000);
+      return { ...state, elapsed };
+    }
 
-    case 'PAUSE':
-      return { ...state, isRunning: false };
+    case 'PAUSE': {
+      if (!state.isRunning || state.startTimestamp === null) return state;
+      const elapsed = state.baseElapsed + Math.floor((action.now - state.startTimestamp) / 1000);
+      return { ...state, isRunning: false, elapsed, baseElapsed: elapsed, startTimestamp: null };
+    }
 
     case 'RESUME':
-      return { ...state, isRunning: true };
+      return { ...state, isRunning: true, startTimestamp: action.now, baseElapsed: state.elapsed };
 
     case 'COMPLETE_RUN1':
       if (state.phase !== 'run1') return state;
@@ -160,7 +178,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (state.isRunning) {
-      intervalRef.current = setInterval(() => dispatch({ type: 'TICK' }), 1000);
+      intervalRef.current = setInterval(() => dispatch({ type: 'TICK', now: Date.now() }), 500);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -173,12 +191,12 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   }, [state.isRunning]);
 
   const startWorkout = useCallback((config: WorkoutConfig) => {
-    dispatch({ type: 'START_WORKOUT', config });
+    dispatch({ type: 'START_WORKOUT', config, now: Date.now() });
   }, []);
-  const pause = useCallback(() => dispatch({ type: 'PAUSE' }), []);
-  const resume = useCallback(() => dispatch({ type: 'RESUME' }), []);
+  const pause = useCallback(() => dispatch({ type: 'PAUSE', now: Date.now() }), []);
+  const resume = useCallback(() => dispatch({ type: 'RESUME', now: Date.now() }), []);
   const toggleTimer = useCallback(() => {
-    dispatch({ type: state.isRunning ? 'PAUSE' : 'RESUME' });
+    dispatch({ type: state.isRunning ? 'PAUSE' : 'RESUME', now: Date.now() });
   }, [state.isRunning]);
   const completeRun1 = useCallback(() => dispatch({ type: 'COMPLETE_RUN1' }), []);
   const setPhase = useCallback((phase: WorkoutPhase) => dispatch({ type: 'SET_PHASE', phase }), []);
