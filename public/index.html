@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!--
+      viewport-fit=cover: lets content extend under the notch/status bar area
+      so the dark background fills the full screen edge-to-edge on iOS.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+
+    <!-- Safari: tints the browser chrome and status bar dark -->
+    <meta name="theme-color" content="#0D0D0D" />
+
+    <!-- iOS PWA (Add to Home Screen): run fullscreen with dark status bar -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Murph" />
+
+    <title>Murph Challenge</title>
+
+    <style>
+      /* Force dark background from the very first paint so there is no
+         white flash before React mounts. */
+      html,
+      body {
+        background-color: #0d0d0d;
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
